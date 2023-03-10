@@ -70,18 +70,27 @@ async fn distance(req: web::Query<RouteInfoParam>) -> Result<HttpResponse, AppEr
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
-struct PathfindParam {
+struct PathfindFastestParam {
     station_from: String,
     station_to: String,
     time_from: NaiveTime,
 }
 
 #[get("/get-fastest-route")]
-async fn get_fastest_route(req: web::Query<PathfindParam>) -> Result<HttpResponse, AppError> {
+async fn get_fastest_route(
+    req: web::Query<PathfindFastestParam>,
+) -> Result<HttpResponse, AppError> {
     let station_from = Station::from_str(&req.station_from)?;
     let station_to = Station::from_str(&req.station_to)?;
     let path = choose_fastest_path(station_from, station_to, req.time_from).await?;
     Ok(HttpResponse::Ok().json(path))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct PathfindParam {
+    station_from: String,
+    station_to: String,
 }
 
 #[get("/get-all-transit-route")]
