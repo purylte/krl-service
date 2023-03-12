@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use chrono::{NaiveDateTime, NaiveTime};
+use chrono::{Duration, NaiveDateTime, NaiveTime};
 
 use crate::{
     error::{AppError, AppErrorType},
@@ -132,6 +132,7 @@ async fn get_first_train_schedule_to_station_same_line(
 async fn concat_train_schedule_path_from_station_path(
     path: Vec<Station>,
     time_start: NaiveTime,
+    transit_duration: Duration,
 ) -> Result<Vec<TrainSchedule>, AppError> {
     let mut train_schedule_path = Vec::new();
     let mut from_time = time_start;
@@ -146,7 +147,7 @@ async fn concat_train_schedule_path_from_station_path(
             get_first_train_schedule_to_station_same_line(station.clone(), next_station, from_time)
                 .await?;
         // println!("train_schedule: {:#?}", train_schedule);
-        from_time = train_schedule.last().unwrap().time_est;
+        from_time = train_schedule.last().unwrap().time_est + transit_duration;
         train_schedule_path.extend(train_schedule);
     }
     Ok(train_schedule_path)
@@ -156,12 +157,13 @@ async fn generate_and_concat_train_schedule_path(
     station_from: Station,
     station_to: Station,
     time_start: NaiveTime,
+    transit_duration: Duration,
 ) -> Result<Vec<Vec<TrainSchedule>>, AppError> {
     let paths = generate_all_transit_paths(station_from, station_to);
     let mut train_schedule_path = Vec::new();
     for path in paths.into_iter() {
         let train_schedules =
-            concat_train_schedule_path_from_station_path(path, time_start).await?;
+            concat_train_schedule_path_from_station_path(path, time_start, transit_duration).await?;
         train_schedule_path.push(train_schedules);
     }
     Ok(train_schedule_path)
@@ -171,9 +173,10 @@ pub async fn choose_fastest_path(
     station_from: Station,
     station_to: Station,
     time_start: NaiveTime,
+    transit_duration: Duration,
 ) -> Result<Vec<TrainSchedule>, AppError> {
     let paths =
-        generate_and_concat_train_schedule_path(station_from, station_to, time_start).await?;
+        generate_and_concat_train_schedule_path(station_from, station_to, time_start, transit_duration).await?;
     let mut fastest_path = None;
     let mut fastest_time = chrono::Duration::max_value();
     for path in paths.into_iter() {

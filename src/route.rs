@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use actix_web::{get, web, HttpResponse, Result};
-use chrono::NaiveTime;
+use chrono::{Duration, NaiveTime};
 use serde_derive::Deserialize;
 
 use crate::{
@@ -75,6 +75,7 @@ struct PathfindFastestParam {
     station_from: String,
     station_to: String,
     time_from: NaiveTime,
+    transit_duration: Option<i64>,
 }
 
 #[get("/get-fastest-route")]
@@ -83,7 +84,11 @@ async fn get_fastest_route(
 ) -> Result<HttpResponse, AppError> {
     let station_from = Station::from_str(&req.station_from)?;
     let station_to = Station::from_str(&req.station_to)?;
-    let path = choose_fastest_path(station_from, station_to, req.time_from).await?;
+    let duration = match req.transit_duration {
+        Some(duration) => Duration::minutes(duration),
+        None => Duration::minutes(0),
+    };
+    let path = choose_fastest_path(station_from, station_to, req.time_from, duration).await?;
     Ok(HttpResponse::Ok().json(path))
 }
 
