@@ -1,9 +1,11 @@
 use serde::Serialize;
-use strum_macros::EnumString;
+use serde_json::{Map, Value};
+use strum::IntoEnumIterator;
+use strum_macros::{EnumIter, EnumString};
 
 use crate::station::Station;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug, Serialize, EnumString)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug, Serialize, EnumString, EnumIter)]
 pub enum TrainLine {
     B,
     C,
@@ -20,6 +22,16 @@ impl TrainLine {
             TrainLine::R => "Lin Rangkasbitung",
             TrainLine::TP => "Lin Tanjung Priok",
             TrainLine::T => "Lin Tangerang",
+        }
+    }
+
+    pub fn id(&self) -> &str {
+        match *self {
+            TrainLine::B => "B",
+            TrainLine::C => "C",
+            TrainLine::R => "R",
+            TrainLine::TP => "TP",
+            TrainLine::T => "T",
         }
     }
 
@@ -72,6 +84,14 @@ impl TrainLine {
                 transit_station: Station::DU,
             }],
         }
+    }
+
+    pub fn map_name_to_id() -> Map<String, Value> {
+        let mut map = Map::new();
+        for line in TrainLine::iter() {
+            map.insert(line.name().into(), line.id().into());
+        }
+        map
     }
 }
 

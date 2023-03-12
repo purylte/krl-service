@@ -105,13 +105,13 @@ async fn get_transit_route(req: web::Query<PathfindParam>) -> Result<HttpRespons
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
 struct StationListFilterParam {
-    line: Option<String>,
+    line_id: Option<String>,
     transit_station_only: Option<bool>,
 }
 
 #[get("/station-list")]
 async fn station_list(req: web::Query<StationListFilterParam>) -> Result<HttpResponse, AppError> {
-    let line = match &req.line {
+    let line = match &req.line_id {
         Some(line) => Some(TrainLine::from_str(line)?),
         None => None,
     };
@@ -121,4 +121,9 @@ async fn station_list(req: web::Query<StationListFilterParam>) -> Result<HttpRes
         None => false,
     };
     Ok(HttpResponse::Ok().json(Station::map_name_to_id(line, transit_station_filter)))
+}
+
+#[get("/line-list")]
+async fn line_list() -> Result<HttpResponse, AppError> {
+    Ok(HttpResponse::Ok().json(TrainLine::map_name_to_id()))
 }

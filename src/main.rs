@@ -3,7 +3,7 @@ use std::net::ToSocketAddrs;
 use actix_web::{App, HttpServer};
 use route::{
     distance, get_fastest_route, get_transit_route, station_list, station_schedule, train_fare,
-    train_schedule,
+    train_schedule, line_list,
 };
 
 mod error;
@@ -29,6 +29,7 @@ async fn main() -> std::io::Result<()> {
             .service(distance)
             .service(get_fastest_route)
             .service(get_transit_route)
+            .service(line_list)
     })
     .bind(ip_port)?
     .run()
