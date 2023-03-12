@@ -362,13 +362,29 @@ impl Station {
             _ => false,
         }
     }
-
-    pub fn json() -> Value {
+    pub fn map_name_to_id(
+        line_opt: Option<TrainLine>,
+        transit_station_only: bool,
+    ) -> Map<String, Value> {
         let mut map = Map::new();
-        for station in Station::iter() {
-            map.insert(station.name().into(), station.id().into());
+        match line_opt {
+            Some(line) => {
+                for station in Station::iter().filter(|st| {
+                    st.line().contains(&line) && (!transit_station_only || st.is_transit_station())
+                }) {
+                    map.insert(station.name().into(), station.id().into());
+                }
+            }
+            None => {
+                for station in
+                    Station::iter().filter(|st| !transit_station_only || st.is_transit_station())
+                {
+                    map.insert(station.name().into(), station.id().into());
+                }
+            }
         }
-        Value::Object(map)
+
+        map
     }
 }
 

@@ -1,8 +1,9 @@
 use serde::Serialize;
+use strum_macros::EnumString;
 
 use crate::station::Station;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug, Serialize)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug, Serialize, EnumString)]
 pub enum TrainLine {
     B,
     C,

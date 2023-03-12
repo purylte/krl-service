@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use actix_web::{get, web, HttpResponse, Responder, Result};
+use actix_web::{get, web, HttpResponse, Result};
 use chrono::NaiveTime;
 use serde_derive::Deserialize;
 
@@ -10,6 +10,7 @@ use crate::{
     fetch::fetch_fare,
     fetch::fetch_station_schedule,
     fetch::fetch_train_schedule,
+    line::TrainLine,
     pathfinder::{choose_fastest_path, generate_all_transit_routes},
     station::Station,
 };
@@ -101,7 +102,23 @@ async fn get_transit_route(req: web::Query<PathfindParam>) -> Result<HttpRespons
     Ok(HttpResponse::Ok().json(path))
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct StationListFilterParam {
+    line: Option<String>,
+    transit_station_only: Option<bool>,
+}
+
 #[get("/station-list")]
-async fn station_list() -> Result<impl Responder> {
-    Ok(web::Json(Station::json()))
+async fn station_list(req: web::Query<StationListFilterParam>) -> Result<HttpResponse, AppError> {
+    let line = match &req.line {
+        Some(line) => Some(TrainLine::from_str(line)?),
+        None => None,
+    };
+
+    let transit_station_filter = match req.transit_station_only {
+        Some(transit_station) => transit_station,
+        None => false,
+    };
+    Ok(HttpResponse::Ok().json(Station::map_name_to_id(line, transit_station_filter)))
 }
