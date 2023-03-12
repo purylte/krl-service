@@ -19,8 +19,8 @@ use crate::{
 #[serde(rename_all = "kebab-case")]
 struct StationScheduleRequestParam {
     station: String,
-    time_from: NaiveTime,
-    time_to: NaiveTime,
+    time_from: Option<NaiveTime>,
+    time_to: Option<NaiveTime>,
 }
 
 #[get("/station-schedule")]
@@ -28,7 +28,15 @@ async fn station_schedule(
     req: web::Query<StationScheduleRequestParam>,
 ) -> Result<HttpResponse, AppError> {
     let station = Station::from_str(&req.station)?;
-    let station_schedule = fetch_station_schedule(station, req.time_from, req.time_to).await?;
+    let time_from = match req.time_from {
+        Some(time) => time,
+        None => NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+    };
+    let time_to = match req.time_to {
+        Some(time) => time,
+        None => NaiveTime::from_hms_opt(23, 59, 59).unwrap(),
+    };
+    let station_schedule = fetch_station_schedule(station, time_from, time_to).await?;
     Ok(HttpResponse::Ok().json(station_schedule))
 }
 
